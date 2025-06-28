@@ -8,6 +8,7 @@ const schema = mongoose.Schema({
     last_name: String,
     phone_number: String
 },{
+    versionKey: false,
     timestamps: {
         createdAt: "created_at",
         updatedAt: "updated_at"
@@ -18,5 +19,5 @@ class Users extends mongoose.Model {
 
 }
 
-schema.localClass(Users);
+schema.loadClass(Users);
 module.exports = mongoose.model("users",schema);
