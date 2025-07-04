@@ -6,7 +6,7 @@ const CustomError = require("../lib/Error");
 const Enume = require("../config/Enume");
 const AuditLogs = require("../lib/AuditLogs");
 const logger = require("../lib/logger/LoggerClass");
-
+const auth = require("../lib/auth")();
 /*
     *Create
     *Read
@@ -15,8 +15,12 @@ const logger = require("../lib/logger/LoggerClass");
     *CRUD
 */
 
+router.all("*", auth.authenticate(), (req, res, next) => {
+    next();
+});
+
 /* GET categories listing. */
-router.get('/', async(req, res,next) => {
+router.get('/', auth.checkRoles("category_view"), async(req, res,next) => {
 
   try {
         let categories = await Categories.find({});
@@ -31,7 +35,7 @@ router.get('/', async(req, res,next) => {
 
 });
 
-router.post("/add", async(req,res) => {
+router.post("/add", auth.checkRoles("category_add"), async(req,res) => {
   let body = req.body;
   try {
 
@@ -57,7 +61,7 @@ router.post("/add", async(req,res) => {
   }
 });
 
-router.post("/update", async (req,res) => {
+router.post("/update", auth.checkRoles("category_update"), async (req,res) => {
   let body = req.body
   try{
 
@@ -80,7 +84,7 @@ router.post("/update", async (req,res) => {
   }
 });
 
-router.post("/delete", async (req,res) => {
+router.post("/delete", auth.checkRoles("category_delete"), async (req,res) => {
   let body= req.body;
 
   try{
