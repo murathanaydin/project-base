@@ -2,9 +2,12 @@ const passport = require("passport");
 const { ExtractJwt , Strategy } = require("passport-jwt");
 const Users = require("../db/modules/Users");
 const UserRoles = require("../db/modules/UserRoles");
-
 const config = require("../config");
-const UserRoles = require("../db/modules/UserRoles");
+const RolePrivileges = require("../db/modules/RolePrivileges");
+const privs = require("../config/role_privileges");
+const Response = require("../lib/Response");
+const { HTTP_CODES } = require("../config/Enume");
+const CustomError = require("./Error");
 
 module.exports = function() {
     let strategy = new Strategy({
@@ -15,7 +18,7 @@ module.exports = function() {
         try {
 
 
-            let user = await Users.findOne({ _id: payload._id });
+            let user = await Users.findOne({ _id: payload.id });
 
         if (user) {
 
@@ -23,9 +26,11 @@ module.exports = function() {
 
             let rolePrivileges = await RolePrivileges.find({ role_id: {$in: userRoles.map(ur => ur.role_id) } });
 
+            let privileges = rolePrivileges.map( rp => privs.privileges.find( x => x.key == rp.permission))
+
             done(null, {
                 id: user._id,
-                roles: rolePrivileges,
+                roles: privileges,
                 email: user.email,
                 first_name: user.first_name,
                 last_name: user.last_name,
@@ -50,6 +55,23 @@ module.exports = function() {
         },
         authenticate: function () {
             return passport.authenticate("jwt", {session: false});
+        },
+        checkRoles: (...expectedRoles) => {
+            return (req, res, next) => {
+
+                let i=0;
+                let privileges = req.user.roles.map( x => x.key);
+                
+                while(i<expectedRoles.length && !privileges.includes(expectedRoles[i])) i++;
+
+                if (i>=expectedRoles.length) {
+                    let response = Response.errorResponse(new CustomError(HTTP_CODES.UNAUTHORIZED, "Need Permission", "Need Permission"));
+                    return res.status(response.code).json(response);
+                }
+
+                return next(); // Authorized
+
+            }
         }
     }
 }
