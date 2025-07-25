@@ -25,6 +25,11 @@ class LoggerClass{
         logger.warn(logs);
     }
 
+    error(email, location, procType, log) {
+    let logs = this.#createLogObject(email, location, procType, log);
+    logger.error(logs);
+    }
+
     verbose(email, location, procType, log) {
         let logs = this.#createLogObject(email, location, procType, log);
         logger.verbose(logs);
